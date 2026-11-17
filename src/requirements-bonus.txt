@@ -1,0 +1,2 @@
+# Bonus only: python -m lab9.inspect_port. CI does not install this file.
+inspect-ai==0.3.290
