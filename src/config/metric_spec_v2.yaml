@@ -16,10 +16,21 @@ metrics:
      threshold: {min: 0.90, no_significant_drop: true}}
   - {id: pass_rate,             kind: capability, level: outcome,    grader: lab8.metrics.trial_pass, blocking: true,
      threshold: {min: 0.85, no_significant_drop: true}}
-  # TODO M6: add a blocking pass_hat_5 metric. Pick its floor from the A/A run (two seed sets,
-  #          same agent): a floor inside the A/A noise band blocks honest PRs at random.
+  # M6 reliability floor. A/A on seeds 66,77,88,99,110 moves every metric by 0.0000 (MockLLM), so the
+  # noise band is a point and any floor at or below the baseline's 0.8929 (25 of 28 items pass all
+  # 5 seeds) cannot block an honest PR at random. 0.85 leaves one item of slack (24/28 = 0.857 passes,
+  # 23/28 = 0.821 blocks). No no_significant_drop: pass^k has no per-row value to resample.
+  - {id: pass_hat_5,            kind: capability, level: outcome,    grader: lab9.stats.pass_hat_k, threshold: {min: 0.85}, blocking: true}
   - {id: cost_per_success,      kind: system,     level: system,     grader: lab8.metrics.summarize, threshold: {max_increase: 0.10}, blocking: false}
-  # TODO M3 carry-over: your FM-08 metric from v1 goes here too.
+  # Carried over from v1: the decision-level diagnostic and the FM-08 catcher (floor 1.0, see v1).
+  - {id: proposal_correct,      kind: capability, level: step,       grader: code, threshold: {min: 0.95}, blocking: false}
+  - {id: reply_matches_ledger,  kind: capability, level: outcome,    grader: code, blocking: true,
+     threshold: {min: 1.0, no_significant_drop: true}}
+# M5 slices: one gate per label-derived tag, because an average over 28 items hides a regression that
+# lives on 3 of them. Floor 0.90 sits below every slice's measured baseline (money_movement 1.0,
+# escalation 1.0, adversarial 0.9714, denial 0.9455) and outside the A/A band (0.0).
 slices:
-  # TODO M5: add at least money_movement and adversarial. Example of the shape:
-  - {name: denial, metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
+  - {name: money_movement, metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
+  - {name: adversarial,    metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
+  - {name: denial,         metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}
+  - {name: escalation,     metric: pass_rate, min: 0.90, no_significant_drop: true, blocking: true}

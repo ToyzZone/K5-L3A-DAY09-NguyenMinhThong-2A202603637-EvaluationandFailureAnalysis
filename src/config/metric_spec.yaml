@@ -15,4 +15,11 @@ metrics:
      threshold: {min: 0.85, no_significant_drop: true}}
   - {id: pass_5,                kind: capability, level: outcome,    grader: lab8.metrics.summarize, threshold: {min: 0.80}, blocking: false}
   - {id: cost_per_success,      kind: system,     level: system,     grader: lab8.metrics.summarize, threshold: {max_increase: 0.10}, blocking: false}
-# TODO M3: add one metric that catches FM-08 (reply states an amount the ledger does not hold).
+  # Decision-level diagnostic: explains trials whose ledger is right by accident (host cap, order
+  # ceiling) while the agent asked for the wrong amount. Not blocking: pass_rate already fails them.
+  - {id: proposal_correct,      kind: capability, level: step,       grader: code, threshold: {min: 0.95}, blocking: false}
+  # FM-08: every amount the reply states must equal the ledger. Floor 1.0, not 0.95: the lie sits on
+  # the 2 of 14 items where the host caps the refund below the proposal, so an agent misreporting on
+  # 1 seed in 5 still averages 0.971 and its paired CI touches 0. Only a zero-tolerance floor sees it.
+  - {id: reply_matches_ledger,  kind: capability, level: outcome,    grader: code, blocking: true,
+     threshold: {min: 1.0, no_significant_drop: true}}
