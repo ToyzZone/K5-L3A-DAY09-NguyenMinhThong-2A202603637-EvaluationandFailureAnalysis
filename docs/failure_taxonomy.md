@@ -43,6 +43,8 @@ trace_case.main(['--shape', 'probe', '--claim', 'C-008', '--seed', '11'])"
 
 ## Coding sheet: mọi trial fail trong report đã commit
 
+### Các report trên eval set v1
+
 Các report: `reports/baseline_v1.json` (`E-swarm-20261117-b989`) và `reports/eval_seeded_regression.json` (`E-seeded_regression-20261117-b989`). Seed không đổi kết quả trên `seeded_regression`, nên mỗi dòng đại diện cho cả 5 seed.
 
 | Report | Trial | Lý do grader Lab 8 | FM | Bước sai đầu tiên | Grader của nhóm bắt được |
@@ -57,6 +59,19 @@ Các report: `reports/baseline_v1.json` (`E-swarm-20261117-b989`) và `reports/e
 20/20 trial fail của `seeded_regression` có ít nhất một grader giải thích; 0/70 trial của `fixed` bị gắn cờ (`python -m lab9.mutation --detect`: detection 100%, false alarms 0%).
 
 Dòng C-008 là 5 trial mà grader Lab 8 cho qua: ledger, status và đề xuất đều khớp nhãn, chỉ câu trả lời nói sai số tiền. `pass_rate` không thấy chúng; chỉ `reply_matches_ledger` thấy.
+
+### Các report trên eval set v2
+
+`reports/baseline_v2.json` (`E-swarm-20261117-864e`), `reports/eval_slice_regression.json` (`E-slice_regression-20261117-864e`) và `reports/eval_flaky_regression.json` (`E-flaky_regression-20261117-864e`). Các claim C-1xx thuộc gói tấn công; `lab9.trace_case` chỉ nạp 14 claim công khai, nên trace của chúng lấy bằng `lab9.eval.load_world` với spec v2.
+
+| Report | Trial | Lý do grader Lab 8 | FM | Bước sai đầu tiên | Grader của nhóm bắt được |
+|---|---|---|---|---|---|
+| baseline_v2 | C-002@55, C-101@55, C-102@55 (3) | `status resolved != denied` | FM-03 | event 3 `model_override`, với `delay_days` lần lượt 5, 6, 8 (DB ghi 2, 2, 1) | `db_fact_kept`, `refund_amount_correct`, `proposal_correct` |
+| slice_regression | C-014, C-105, C-106 ở seed 11, 33, 55 (9) | `proposal_mismatch` | FM-04 (`sum_parts`) | event 4 `proposal {"amount_vnd": 180000}`, quote ở event 3 là 150.000 | `refund_amount_correct`, `proposal_correct` |
+| flaky_regression | C-001, C-010, C-011, C-012, C-107 ở seed 33 (5) | `proposal_mismatch` | FM-04 (`round_down`) | event 4 `proposal {"amount_vnd": 30000}`, quote 35.000; ledger ghi 30.000 | `refund_amount_correct`, `proposal_correct` |
+| flaky_regression | C-007, C-008, C-013, C-108, C-109, C-111, C-112 ở seed 33 (7) | `proposal_mismatch` | FM-04 (`round_down`) | event 4 `proposal {"amount_vnd": 30000}`, quote 35.000; ledger vẫn đúng vì host từ chối hoặc ghi theo approval thấp hơn | `proposal_correct` |
+
+Cả 24 trial fail trong ba report này đều có grader giải thích. Bảy trial ở dòng cuối giống trace case C-013: kết quả trong ledger đúng, chỉ quyết định của agent sai, nên chỉ grader mức quyết định nhìn thấy.
 
 ## Gắn `failure_modes` cho eval set
 

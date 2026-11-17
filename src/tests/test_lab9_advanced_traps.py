@@ -90,3 +90,22 @@ def _loosen(change):
         "reseed_bootstrap", "version_bump_same_eval_set"])
 def test_ratchet_refuses_a_looser_spec(change):
     assert any(p.startswith("ratchet") for p in _check(_report(copy.deepcopy(ROWS)), _loosen(change), SPEC))
+
+
+@pytest.mark.parametrize("damage", [
+    lambda pr: pr["metrics"].update(pass_rate="NaN"),       # NaN written as text
+    lambda pr: pr["rows"][0].update(pass_rate="PASS"),
+    lambda pr: pr.pop("rows"),
+    lambda pr: pr.pop("metrics"),
+    lambda pr: pr.pop("manifest"),
+    lambda pr: pr["rows"][0].pop("item_id"),
+    lambda pr: pr.clear(),
+], ids=["metric_as_text", "row_value_as_text", "no_rows", "no_metrics", "no_manifest", "row_without_item_id",
+        "empty_object"])
+def test_unreadable_report_is_refused_not_crashed_on(damage):
+    from lab9 import gate
+
+    pr = _report(copy.deepcopy(ROWS))
+    damage(pr)
+    blocked, lines = gate.check(pr, _report(copy.deepcopy(ROWS)), SPEC)
+    assert blocked == ["integrity"] and lines
