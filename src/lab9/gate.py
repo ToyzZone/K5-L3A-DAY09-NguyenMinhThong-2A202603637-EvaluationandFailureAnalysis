@@ -35,6 +35,9 @@ def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = N
         including dropping no_significant_drop)
       - an item's slice tags in PR rows differ from the baseline's (relabelling an item out of a
         slice hides its regression from the slice gate)"""
+    unreadable = _unreadable(pr, "PR") + _unreadable(base, "baseline")
+    if unreadable:
+        return unreadable
     problems = _report_problems(pr, "PR") + _report_problems(base, "baseline")
     pr_keys, base_keys = _row_keys(pr), _row_keys(base)
     if set(pr_keys) != set(base_keys):
@@ -48,7 +51,10 @@ def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = N
     holes = Counter(m for r in pr["rows"] for m in graded if r.get(m) is None)
     problems += [f"{n} PR row(s) have no value for {m} (grader crashed or result removed)"
                  for m, n in sorted(holes.items())]
-    problems += _metric_drift(pr, graded, spec)
+    odd = Counter(m for r in pr["rows"] for m in graded if r.get(m) is not None and not _finite(r[m]))
+    problems += [f"{n} PR row(s) carry a value for {m} that is not a verdict" for m, n in sorted(odd.items())]
+    if not odd:                             # the rows cannot be summed when a verdict is text
+        problems += _metric_drift(pr, graded, spec)
     tags = {r["item_id"]: sorted(r.get("slices") or []) for r in base["rows"]}
     moved = sorted({r["item_id"] for r in pr["rows"]
                     if r["item_id"] in tags and sorted(r.get("slices") or []) != tags[r["item_id"]]})
@@ -63,10 +69,26 @@ def _row_keys(rep: dict) -> Counter:
     return Counter((r.get("item_id"), r.get("seed")) for r in rep["rows"])
 
 
+def _finite(v: object) -> bool:
+    """A real, finite number (bool counts: verdicts are True/False). Text such as "NaN" is not."""
+    return isinstance(v, (bool, int, float)) and math.isfinite(v)
+
+
+def _unreadable(rep: object, who: str) -> list[str]:
+    """A file the gate cannot even read as a report. Checked first so it is refused, not crashed on."""
+    if not isinstance(rep, dict):
+        return [f"{who} is not a report object"]
+    out = [f"{who} has no usable {key!r}" for key, kind in (("manifest", dict), ("metrics", dict), ("rows", list))
+           if not isinstance(rep.get(key), kind)]
+    if not out and any(not isinstance(r, dict) or "item_id" not in r or "seed" not in r for r in rep["rows"]):
+        out.append(f"{who} has rows without item_id or seed")
+    return out
+
+
 def _report_problems(rep: dict, who: str) -> list[str]:
     """Checks one report can fail on its own: non-finite metrics, broken graders, row bookkeeping."""
-    problems = [f"{who} metric {k} is {v}" for k, v in rep.get("metrics", {}).items()
-                if isinstance(v, float) and not math.isfinite(v)]
+    problems = [f"{who} metric {k} is {v!r}, not a finite number" for k, v in rep["metrics"].items()
+                if v is not None and not _finite(v)]
     if rep.get("evaluator_failures"):
         problems.append(f"{who} has {len(rep['evaluator_failures'])} evaluator failure(s): graders did not run cleanly")
     manifest = rep.get("manifest", {})
@@ -164,7 +186,10 @@ def slice_check(pr: dict, base: dict, spec: dict) -> tuple[list[str], list[str]]
 
 
 def check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> tuple[list[str], list[str]]:
-    if pr["manifest"]["eval_set_sha"] != base["manifest"]["eval_set_sha"]:
+    unreadable = _unreadable(pr, "PR") + _unreadable(base, "baseline")
+    if unreadable:
+        return ["integrity"], [f"  INTEGRITY {p}" for p in unreadable]
+    if pr["manifest"].get("eval_set_sha") != base["manifest"].get("eval_set_sha"):
         return ["eval_set_sha"], ["  EVAL SET differs from the baseline's: re-run the baseline on the same eval set"]
     problems = integrity_check(pr, base, spec, base_spec)
     if problems:
@@ -214,7 +239,8 @@ def main(argv: list[str] | None = None) -> int:
     base = json.loads(Path(args.baseline).read_text(encoding="utf-8"))
     base_spec = load_spec(Path(args.base_spec)) if args.base_spec else None
     blocked, lines = check(pr, base, load_spec(Path(args.spec)), base_spec)
-    print(f"gate: PR {pr['run_id']} vs main {base['run_id']} · eval set {pr['manifest']['eval_set_sha']}")
+    if not _unreadable(pr, "PR") + _unreadable(base, "baseline"):      # the header needs a readable manifest
+        print(f"gate: PR {pr.get('run_id')} vs main {base.get('run_id')} · eval set {pr['manifest'].get('eval_set_sha')}")
     print("\n".join(lines))
     if blocked:
         print(f"exit 1 — blocked: {', '.join(blocked)}")
