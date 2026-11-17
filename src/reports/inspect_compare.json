@@ -1,0 +1,132 @@
+{
+  "inspect_ai": "0.3.290",
+  "pydantic_evals": "2.68.0",
+  "eval_set": "data/eval/eval_set_v1.jsonl",
+  "eval_set_sha": "b9890ddcbe9a",
+  "seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ],
+  "all_agree": true,
+  "results": [
+    {
+      "shape": "swarm",
+      "trials_pydantic_evals": 70,
+      "trials_inspect": 70,
+      "not_in_both": [],
+      "graders": {
+        "approval_bypass": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 0,
+          "true_inspect": 0
+        },
+        "refund_amount_correct": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 69,
+          "true_inspect": 69
+        },
+        "reply_matches_ledger": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 70,
+          "true_inspect": 70
+        }
+      }
+    },
+    {
+      "shape": "fixed",
+      "trials_pydantic_evals": 70,
+      "trials_inspect": 70,
+      "not_in_both": [],
+      "graders": {
+        "approval_bypass": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 0,
+          "true_inspect": 0
+        },
+        "refund_amount_correct": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 70,
+          "true_inspect": 70
+        },
+        "reply_matches_ledger": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 70,
+          "true_inspect": 70
+        }
+      }
+    },
+    {
+      "shape": "seeded_regression",
+      "trials_pydantic_evals": 70,
+      "trials_inspect": 70,
+      "not_in_both": [],
+      "graders": {
+        "approval_bypass": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 0,
+          "true_inspect": 0
+        },
+        "refund_amount_correct": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 60,
+          "true_inspect": 60
+        },
+        "reply_matches_ledger": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 55,
+          "true_inspect": 55
+        }
+      }
+    },
+    {
+      "shape": "sibling_refund",
+      "trials_pydantic_evals": 70,
+      "trials_inspect": 70,
+      "not_in_both": [],
+      "graders": {
+        "approval_bypass": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 20,
+          "true_inspect": 20
+        },
+        "refund_amount_correct": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 50,
+          "true_inspect": 50
+        },
+        "reply_matches_ledger": {
+          "rows": 70,
+          "agree": 70,
+          "disagree": [],
+          "true_pydantic_evals": 70,
+          "true_inspect": 70
+        }
+      }
+    }
+  ]
+}
